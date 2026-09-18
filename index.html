@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adaptive Onboarding — Nabu Suggestion Demo</title>
+<style>
+  :root{
+    --bg: #0a0d0c;
+    --panel: #121613;
+    --panel-2: #171c18;
+    --line: #232b25;
+    --mint: #5eead4;
+    --mint-dim: #2d5a50;
+    --text: #e6ede9;
+    --muted: #8a9690;
+    --amber: #e0b855;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); min-height:100vh;
+  }
+  .wrap{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  .tag{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--mint);
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  h1{
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 28px;
+    max-width: 52ch;
+  }
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 16px;
+  }
+  .q-title{
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .q-hint{
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .choice-row{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  button{
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .choice-btn{
+    flex: 1 1 200px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: left;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .choice-btn:hover, .choice-btn:focus-visible{
+    border-color: var(--mint-dim);
+    background: #182420;
+    outline: none;
+  }
+  .choice-btn .lead{
+    display:block;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .choice-btn .desc{
+    display:block;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+
+  .route-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mint);
+    background: rgba(94,234,212,0.08);
+    border: 1px solid var(--mint-dim);
+    padding: 3px 9px;
+    border-radius: 100px;
+  }
+
+  .panel-head{
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+  .panel-head h2{
+    font-size: 17px;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .progress{
+    display:flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .dot{
+    height: 4px;
+    flex: 1;
+    background: var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .dot.done{ background: var(--mint); }
+  .dot.current{ background: var(--mint-dim); }
+
+  .step-num{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .step-title{
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .you-see{
+    background: var(--panel-2);
+    border-left: 2px solid var(--mint-dim);
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+  .you-see b{ color: var(--mint); font-weight: 600; }
+
+  .btn-row{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn{
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 500;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text);
+  }
+  .btn.primary{
+    background: var(--mint);
+    color: #082019;
+    border-color: var(--mint);
+    font-weight: 600;
+  }
+  .btn.primary:hover{ background: #7ff2dd; }
+  .btn.ghost:hover{ border-color: var(--mint-dim); }
+  .btn:focus-visible{ outline: 2px solid var(--mint); outline-offset: 2px; }
+
+  .field-label{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+  .field{
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 11px 12px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+  }
+  .field:focus{ outline: none; border-color: var(--mint-dim); }
+
+  .expert-note{
+    font-size: 13px;
+    color: var(--muted);
+    margin: 14px 0 0;
+    line-height: 1.5;
+  }
+  .expert-note a{ color: var(--mint); cursor:pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+  .success{
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+  .success .mark{
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(94,234,212,0.12);
+    border: 1px solid var(--mint-dim);
+    display: flex; align-items:center; justify-content:center;
+    margin: 0 auto 16px;
+    color: var(--mint);
+    font-size: 20px;
+  }
+  .success h2{ font-size: 17px; margin: 0 0 6px; }
+  .success p{ color: var(--muted); font-size: 13.5px; margin: 0; }
+
+  .reset{
+    display:block;
+    margin: 24px auto 0;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12.5px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .reset:hover{ color: var(--text); }
+
+  .compare{
+    margin-top: 34px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+  .compare-title{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .compare-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .compare-col{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .compare-col h3{
+    font-size: 12.5px;
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .compare-col ul{
+    margin: 0; padding-left: 16px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  @media (max-width: 480px){
+    .compare-grid{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tag">Suggestion prototype · not a live Nabu feature</div>
+  <h1>Adaptive onboarding for exchange linking</h1>
+  <p class="sub">One question up front routes first-timers into a guided, step-matched flow and routes experienced users straight to the input field — without making anyone read a separate guide unassisted.</p>
+
+  <div id="app"></div>
+
+  <div class="compare" id="compareSection" style="display:none;">
+    <div class="compare-title">why this over the current flow</div>
+    <div class="compare-grid">
+      <div class="compare-col">
+        <h3>Today</h3>
+        <ul>
+          <li>Same written guide for everyone</li>
+          <li>User leaves Nabu to find settings themselves</li>
+          <li>No feedback if they're on the wrong page</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h3>With adaptive routing</h3>
+        <ul>
+          <li>One question sorts novice vs. experienced</li>
+          <li>Deep link opens the exact page needed</li>
+          <li>Each step confirms before advancing</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const app = document.getElementById('app');
+const compareSection = document.getElementById('compareSection');
+
+const steps = [
+  {
+    label: "Open API Management",
+    body: "On Binance, go to <b>Profile → API Management</b>. You should land on a page titled “API Management” — it may show an empty list if you've never made a key before.",
+    cta: "Open API Management on Binance",
+    url: "https://www.binance.com/en/my/settings/api-management"
+  },
+  {
+    label: "Create a new key",
+    body: "Look for a button labeled <b>Create API</b> (or “Create API Key”). Choose <b>System generated</b> when asked what type of key to create.",
+    cta: "I'm on this page",
+    url: null
+  },
+  {
+    label: "Set the right permissions",
+    body: "Under permissions, turn <b>on</b> “Enable Reading” and “Enable Spot & Margin Trading” if you plan to trade. Leave <b>“Enable Withdrawals” off</b> — Nabu never needs it, and leaving it off protects your funds.",
+    cta: "Permissions set",
+    url: null
+  },
+  {
+    label: "Copy your key and secret",
+    body: "Binance shows your <b>API Key</b> and <b>Secret Key</b> once. Copy both now — the secret won't be shown again. Paste them into the fields below.",
+    cta: null,
+    url: null
+  }
+];
+
+let state = { route: null, step: 0 };
+
+function render(){
+  if(!state.route){
+    app.innerHTML = `
+      <div class="card">
+        <div class="q-title">Quick question before you connect</div>
+        <div class="q-hint">Have you created an exchange API key before?</div>
+        <div class="choice-row">
+          <button class="choice-btn" data-route="expert">
+            <span class="lead">Yes, I have</span>
+            <span class="desc">Skip straight to the key fields</span>
+          </button>
+          <button class="choice-btn" data-route="guided">
+            <span class="lead">No, this is my first time</span>
+            <span class="desc">Walk me through it step by step</span>
+          </button>
+        </div>
+      </div>
+    `;
+    app.querySelectorAll('.choice-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.route = b.dataset.route;
+        state.step = 0;
+        render();
+      });
+    });
+    compareSection.style.display = 'none';
+    return;
+  }
+
+  if(state.route === 'expert'){
+    app.innerHTML = `
+      <div class="card">
+        <div class="panel-head">
+          <h2>Connect Binance</h2>
+          <span class="route-badge">expert route</span>
+        </div>
+        <div class="field-label">API KEY</div>
+        <input class="field" placeholder="Paste your Binance API key" />
+        <div class="field-label">API SECRET</div>
+        <input class="field" type="password" placeholder="Paste your Binance API secret" />
+        <div class="btn-row">
+          <button class="btn primary" id="expertConnect">Connect</button>
+        </div>
+        <p class="expert-note">First time doing this after all? <a id="switchToGuided">Show me the guided steps instead</a>.</p>
+      </div>
+    `;
+    document.getElementById('expertConnect').addEventListener('click', ()=>{
+      state.route = 'done';
+      render();
+    });
+    document.getElementById('switchToGuided').addEventListener('click', ()=>{
+      state.route = 'guided';
+      state.step = 0;
+      render();
+    });
+    compareSection.style.display = 'block';
+    return;
+  }
+
+  if(state.route === 'guided'){
+    const s = steps[state.step];
+    const dots = steps.map((_, i)=>{
+      let cls = 'dot';
+      if(i < state.step) cls += ' done';
+      else if(i === state.step) cls += ' current';
+      return `<div class="${cls}"></div>`;
+    }).join('');
+
+    let ctaHtml = '';
+    if(s.url){
+      ctaHtml = `
+        <div class="btn-row">
+          <button class="btn ghost" id="openLink">${s.cta}</button>
+          <button class="btn primary" id="confirmStep">I see it — next step</button>
+        </div>
+      `;
+    } else if(s.cta){
+      ctaHtml = `
+        <div class="btn-row">
+          <button class="btn primary" id="confirmStep">${s.cta}</button>
+        </div>
+      `;
+    } else {
+      ctaHtml = `
+        <div class="field-label">API KEY</div>
+        <input class="field" placeholder="Paste your Binance API key" />
+        <div class="field-label">API SECRET</div>
+        <input class="field" type="password" placeholder="Paste your Binance API secret" />
+        <div class="btn-row">
+          <button class="btn primary" id="confirmStep">Connect</button>
+        </div>
+      `;
+    }
+
+    app.innerHTML = `
+      <div class="card">
+        <div class="panel-head">
+          <h2>Connect Binance</h2>
+          <span class="route-badge">guided route</span>
+        </div>
+        <div class="progress">${dots}</div>
+        <div class="step-num">Step ${state.step + 1} of ${steps.length}</div>
+        <div class="step-title">${s.label}</div>
+        <div class="you-see">${s.body}</div>
+        ${ctaHtml}
+      </div>
+    `;
+
+    const openLinkBtn = document.getElementById('openLink');
+    if(openLinkBtn){
+      openLinkBtn.addEventListener('click', ()=>{
+        window.open(s.url, '_blank');
+      });
+    }
+    document.getElementById('confirmStep').addEventListener('click', ()=>{
+      if(state.step < steps.length - 1){
+        state.step += 1;
+        render();
+      } else {
+        state.route = 'done';
+        render();
+      }
+    });
+    compareSection.style.display = 'block';
+    return;
+  }
+
+  if(state.route === 'done'){
+    app.innerHTML = `
+      <div class="card">
+        <div class="success">
+          <div class="mark">✓</div>
+          <h2>Binance connected</h2>
+          <p>This is where the real flow would confirm the key works and return you to strategy creation.</p>
+        </div>
+      </div>
+      <button class="reset" id="resetDemo">Restart demo</button>
+    `;
+    document.getElementById('resetDemo').addEventListener('click', ()=>{
+      state = { route: null, step: 0 };
+      render();
+    });
+    return;
+  }
+}
+
+render();
+</script>
+</body>
+</html>
