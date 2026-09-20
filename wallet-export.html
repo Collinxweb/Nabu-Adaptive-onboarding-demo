@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In-App Wallet Export — Nabu Suggestion Demo</title>
+<style>
+  :root{
+    --bg: #0a0d0c;
+    --panel: #121613;
+    --panel-2: #171c18;
+    --line: #232b25;
+    --mint: #5eead4;
+    --mint-dim: #2d5a50;
+    --text: #e6ede9;
+    --muted: #8a9690;
+    --amber: #e0b855;
+    --red: #f47174;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); min-height:100vh;
+  }
+  .wrap{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .tag{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--mint);
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  h1{
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 22px;
+    max-width: 54ch;
+  }
+  .sub b{ color: var(--text); }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title{
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+  .tab-row{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .tab{
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--muted);
+  }
+  .tab.active{
+    background: rgba(94,234,212,0.1);
+    border-color: var(--mint-dim);
+    color: var(--mint);
+    font-weight: 600;
+  }
+  .field-label{
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+  .field-static{
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+  }
+  .btn{
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border: 1px solid var(--mint);
+    background: var(--mint);
+    color: #082019;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn:hover{ background: #7ff2dd; }
+  .btn.ghost{
+    background: transparent;
+    color: var(--text);
+    border-color: var(--line);
+    font-weight: 500;
+  }
+  .btn.ghost:hover{ border-color: var(--mint-dim); }
+
+  /* Modal */
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+  }
+  .modal-overlay.open{ display: flex; }
+  .modal{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px 14px 0 0;
+    width: 100%;
+    max-width: 480px;
+    padding: 22px 20px 26px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp{
+    from{ transform: translateY(100%); }
+    to{ transform: translateY(0); }
+  }
+  .modal-head{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 4px;
+  }
+  .modal-title{ font-size: 16px; font-weight: 700; }
+  .modal-close{
+    background: none; border: none; color: var(--muted);
+    font-size: 18px; cursor: pointer; padding: 4px;
+  }
+  .modal-sub{ font-size: 12.5px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
+  .warn-box{
+    background: rgba(224,184,85,0.08);
+    border: 1px solid rgba(224,184,85,0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--amber);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .key-box{
+    background: #06090a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    word-break: break-all;
+    margin-bottom: 12px;
+    color: var(--muted);
+    position: relative;
+    filter: blur(5px);
+    transition: filter 0.2s ease;
+    user-select: none;
+  }
+  .key-box.revealed{
+    filter: none;
+    color: var(--text);
+    user-select: text;
+  }
+  .modal-btn-row{ display:flex; gap: 8px; }
+  .modal-btn-row .btn{ flex: 1; }
+
+  .compare{
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .compare-title{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .compare-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .compare-col{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .compare-col h3{
+    font-size: 12.5px;
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .compare-col ul{
+    margin: 0; padding-left: 16px;
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+  .compare-col.today{ border-color: rgba(244,113,116,0.3); }
+  .compare-col.suggested{ border-color: var(--mint-dim); }
+  @media (max-width: 480px){
+    .compare-grid{ grid-template-columns: 1fr; }
+  }
+
+  .note{
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 14px;
+  }
+  .note b{ color: var(--mint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tag">Suggestion prototype · not a live Nabu feature</div>
+  <h1>In-app wallet export</h1>
+  <p class="sub">If Nabu keeps its Privy-embedded wallet architecture, this is the fix: Privy's own SDK already provides an <b>exportWallet()</b> method that opens a secure key-export modal directly inside the host app. Nabu's current docs send users to a separate site instead. Tap "Export Wallet" below to see the in-app version.</p>
+
+  <div class="card">
+    <div class="card-title">Manage Wallet</div>
+    <div class="tab-row">
+      <div class="tab active">Deposit</div>
+      <div class="tab">Withdraw</div>
+    </div>
+    <div class="field-label">WALLET ADDRESS</div>
+    <div class="field-static">0xf9DA9628D6092c545b677ebdcF0F543Edd7d9E1</div>
+    <button class="btn" id="exportBtn">Export Wallet</button>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Export your wallet</div>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <p class="modal-sub">This is the private key for your Nabu wallet. Anyone with this key can control your funds — never share it, and only paste it into wallets or apps you trust.</p>
+      <div class="warn-box">⚠ Treat this like a password. Nabu cannot recover it for you if lost.</div>
+      <div class="field-label">PRIVATE KEY</div>
+      <div class="key-box" id="keyBox">0x4a91f3c8e2b7d015a6c93f8e21b4d7a0c5e8f92146b3d7a0c1e5f8b2946d3c7a1</div>
+      <div class="modal-btn-row">
+        <button class="btn ghost" id="revealBtn">Reveal key</button>
+        <button class="btn" id="copyBtn">Copy key</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="compare">
+    <div class="compare-title">today vs. this suggestion</div>
+    <div class="compare-grid">
+      <div class="compare-col today">
+        <h3>Today (Bug #16)</h3>
+        <ul>
+          <li>Leave Nabu, go to home.privy.io</li>
+          <li>Link Google account there separately</li>
+          <li>Find "Nabu" in an app list</li>
+          <li>Export key, then import into MetaMask</li>
+          <li>Re-export from MetaMask, paste back into Nabu</li>
+        </ul>
+      </div>
+      <div class="compare-col suggested">
+        <h3>Suggested</h3>
+        <ul>
+          <li>Tap "Export Wallet" inside Nabu</li>
+          <li>Modal opens in-app</li>
+          <li>Reveal and copy the key</li>
+          <li>Done — no other site visited</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">
+      <b>exportWallet()</b> is a documented Privy SDK method built for exactly this — host apps calling it directly instead of directing users to Privy's own dashboard. This isn't new infrastructure for Nabu to build, just a different, already-available integration point.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const exportBtn = document.getElementById('exportBtn');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalClose = document.getElementById('modalClose');
+const revealBtn = document.getElementById('revealBtn');
+const copyBtn = document.getElementById('copyBtn');
+const keyBox = document.getElementById('keyBox');
+
+let revealed = false;
+
+exportBtn.addEventListener('click', ()=>{
+  modalOverlay.classList.add('open');
+});
+modalClose.addEventListener('click', ()=>{
+  modalOverlay.classList.remove('open');
+});
+modalOverlay.addEventListener('click', (e)=>{
+  if(e.target === modalOverlay) modalOverlay.classList.remove('open');
+});
+revealBtn.addEventListener('click', ()=>{
+  revealed = !revealed;
+  keyBox.classList.toggle('revealed', revealed);
+  revealBtn.textContent = revealed ? 'Hide key' : 'Reveal key';
+});
+copyBtn.addEventListener('click', ()=>{
+  const original = copyBtn.textContent;
+  copyBtn.textContent = 'Copied';
+  setTimeout(()=> copyBtn.textContent = original, 1200);
+});
+</script>
+</body>
+</html>
